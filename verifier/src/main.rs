@@ -4,7 +4,7 @@
 use revm::{
     db::CacheState,
     interpreter::CreateScheme,
-    primitives::{calc_excess_blob_gas, keccak256, Bytecode, Env, SpecId, TransactTo, U256},
+    primitives::{calc_excess_blob_gas, keccak256, Bytecode, Env, SpecId, TransactTo, TxKind, U256, B256, Address},
     Evm,
 };
 extern crate libc;
@@ -21,6 +21,7 @@ use alloc::string::ToString;
 use alloc::vec::Vec;
 use alloc::collections::BTreeMap;
 use alloc::alloc::*;
+use alloc::boxed::Box;
 use core::panic::PanicInfo;
 use core::ffi::c_void;
 
@@ -196,19 +197,20 @@ fn execute_test_suite(suite: TestSuite) -> Result<(), String> {
                     .unwrap_or_default()
                     .iter()
                     .map(|item| {
-                        (
-                            item.address,
-                            item.storage_keys
-                                .iter()
-                                .map(|key| U256::from_be_bytes(key.0))
-                                .collect::<Vec<_>>(),
-                        )
+                        let storage_keys: Vec<B256> = item.storage_keys
+                            .iter()
+                            .map(|h256| B256::new(h256.0))
+                            .collect();
+                        revm::primitives::AccessListItem {
+                            address: Address::new(*item.address.0),
+                            storage_keys,
+                        }
                     })
                     .collect();
 
                 let to = match unit.transaction.to {
                     Some(add) => TransactTo::Call(add),
-                    None => TransactTo::Create(CreateScheme::Create),
+                    None => TxKind::Create,
                 };
                 env.tx.transact_to = to;
 
@@ -223,8 +225,8 @@ fn execute_test_suite(suite: TestSuite) -> Result<(), String> {
                     .build();
                 let mut evm = Evm::builder()
                     .with_db(&mut state)
-                    .modify_env(|e| *e = env.clone())
-                    .spec_id(spec_id)
+                    .modify_env(|e| (*e) = Box::new(env.clone()))
+                    .with_spec_id(spec_id)
                     .build();
 
                 // do the deed
