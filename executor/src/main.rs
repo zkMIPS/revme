@@ -2,7 +2,6 @@
 //! Ported from https://github.com/0xEigenLabs/eigen-prover/blob/main/executor/src/lib.rs
 
 use core::time;
-use ethers::abi::Uint;
 use ethers_core::types::{
     BlockId, GethDebugBuiltInTracerType, GethDebugTracerType, GethDebugTracingOptions, GethTrace,
     GethTraceFrame, PreStateFrame,
@@ -46,12 +45,15 @@ fn new_storage(storage: &revm::primitives::state::EvmStorage) -> HashMap<U256, U
         .collect()
 }
 
+fn core256_to_revm256(core256: ethers_core::types::U256) -> revm::primitives::U256 {
+    revm::primitives::U256::from_str_radix(core256.to_string().as_str(), 10).unwrap()
+}
+
 fn fill_test_tx(
     transaction_parts: &mut models::TransactionParts,
     tx: &ethers_core::types::Transaction,
 ) {
-    // let gas_limit_uint = Uint::from(tx.gas.as_u64());
-    let gas_limit_uint = revm::primitives::U256::from(tx.gas.as_u64());
+    let gas_limit_uint = core256_to_revm256(tx.gas);
     transaction_parts.gas_limit.push(gas_limit_uint);
 
     let tx_data = tx.input.0.clone();
@@ -60,7 +62,7 @@ fn fill_test_tx(
     let mut tx_gas_price = revm::primitives::U256::from(0);
     local_fill!(tx_gas_price, tx.gas_price, U256::from_limbs);
     transaction_parts.gas_price = Some(tx_gas_price);
-    transaction_parts.nonce = U256::from(tx.nonce.as_u64());
+    transaction_parts.nonce = core256_to_revm256(tx.nonce);
     transaction_parts.secret_key = B256::default();
     transaction_parts.sender = Some(Address::from(tx.from.as_fixed_bytes()));
 
@@ -73,12 +75,12 @@ fn fill_test_tx(
     local_fill!(tx_value, Some(tx.value), U256::from_limbs);
     transaction_parts.value.push(tx_value);
     transaction_parts.max_fee_per_gas = if tx.max_fee_per_gas.is_some() {
-        Some(U256::from(tx.max_fee_per_gas.unwrap().as_u64()))
+        Some(core256_to_revm256(tx.max_fee_per_gas.unwrap()))
     } else {
         None
     };
     transaction_parts.max_priority_fee_per_gas = if tx.max_priority_fee_per_gas.is_some() {
-        Some(U256::from(tx.max_priority_fee_per_gas.unwrap().as_u64()))
+        Some(core256_to_revm256(tx.max_priority_fee_per_gas.unwrap()))
     } else {
         None
     };
@@ -262,47 +264,51 @@ async fn fill_test_pre(
             ..Default::default()
         };
 
-        let geth_trace: ethers_core::types::GethTrace = client
+        let geth_trace_res = client
             .debug_trace_transaction(tx.hash, trace_options)
-            .await
-            .unwrap();
+            .await;
 
-        log::info!("geth_trace: {:#?}", geth_trace);
+        match geth_trace_res {
+            Ok(geth_trace) => {
+                log::info!("geth_trace: {:#?}", geth_trace);
 
-        match geth_trace.clone() {
-            GethTrace::Known(frame) => {
-                if let GethTraceFrame::PreStateTracer(PreStateFrame::Default(pre_state_mode)) =
-                    frame
-                {
-                    for (address, account_state) in pre_state_mode.0.iter() {
-                        let mut account_info = models::AccountInfo {
-                            balance: U256::from(0),
-                            code: Bytes::from(account_state.code.clone().unwrap_or_default()),
-                            nonce: account_state.nonce.unwrap_or_default().as_u64(),
-                            storage: HashMap::new(),
-                        };
+                match geth_trace.clone() {
+                    GethTrace::Known(frame) => {
+                        if let GethTraceFrame::PreStateTracer(PreStateFrame::Default(pre_state_mode)) =
+                            frame
+                        {
+                            for (address, account_state) in pre_state_mode.0.iter() {
+                                let mut account_info = models::AccountInfo {
+                                    balance: U256::from(0),
+                                    code: Bytes::from(account_state.code.clone().unwrap_or_default()),
+                                    nonce: account_state.nonce.unwrap_or_default().as_u64(),
+                                    storage: HashMap::new(),
+                                };
 
-                        let balance: ethers_core::types::U256 =
-                            account_state.balance.unwrap_or_default();
-                        // The radix of account_state.balance is 10, while that of account_info.balance is 16.
-                        account_info.balance = U256::from(
-                            Uint::from_str_radix(balance.to_string().as_str(), 10)
-                                .unwrap()
-                                .as_u64(),
-                        );
 
-                        if let Some(storage) = account_state.storage.clone() {
-                            for (key, value) in storage.iter() {
-                                let new_key: U256 = U256::from_be_bytes(key.0);
-                                let new_value: U256 = U256::from_be_bytes(value.0);
-                                account_info.storage.insert(new_key, new_value);
+                                let balance: ethers_core::types::U256 =
+                                    account_state.balance.unwrap_or_default();
+                                // The radix of account_state.balance is 10, while that of account_info.balance is 16.
+                                account_info.balance =  revm::primitives::U256::from_str_radix(balance.to_string().as_str(), 10).unwrap();
+                            
+
+                                if let Some(storage) = account_state.storage.clone() {
+                                    for (key, value) in storage.iter() {
+                                        let new_key: U256 = U256::from_be_bytes(key.0);
+                                        let new_value: U256 = U256::from_be_bytes(value.0);
+                                        account_info.storage.insert(new_key, new_value);
+                                    }
+                                }
+                                test_pre.insert(Address::from(address.as_fixed_bytes()), account_info);
                             }
                         }
-                        test_pre.insert(Address::from(address.as_fixed_bytes()), account_info);
                     }
+                    GethTrace::Unknown(_) => {}
                 }
             }
-            GethTrace::Unknown(_) => {}
+            Err(e) => {
+                log::info!("debug_trace_transaction faild {}", e)
+            }        
         }
     }
     test_pre
@@ -312,11 +318,11 @@ async fn fill_test_pre(
 async fn main() -> anyhow::Result<()> {
     env_logger::try_init().unwrap_or_default();
     let rpc_url = env::var("RPC_URL")
-        .unwrap_or("https://mainnet.infura.io/v3/a7df963295d34e5fb4ce1cb3c057722e".to_string());
-    let chain_id = env::var("CHAIN_ID").unwrap_or("1".to_string());
+        .unwrap_or("http://localhost:8545".to_string());
+    let chain_id = env::var("CHAIN_ID").unwrap_or("1337".to_string());
     let chain_id: u64 = chain_id.parse::<_>().unwrap_or(1);
-    let block_path = env::var("BLOCK_PATH").unwrap_or("".to_string());
-    let block_no = env::var("BLOCK_NO").unwrap_or("10889447".to_string());
+    let block_path = env::var("BLOCK_PATH").unwrap_or("./result.json".to_string());
+    let block_no = env::var("BLOCK_NO").unwrap_or("1".to_string());
     let block_no = block_no.parse::<_>().unwrap_or(0);
 
     // Create ethers client and wrap it in Arc<M>
@@ -367,8 +373,6 @@ async fn main() -> anyhow::Result<()> {
     log::info!("Found {txs} transactions.");
 
     let start = Instant::now();
-    // Create the traces directory if it doesn't exist
-    std::fs::create_dir_all("traces").expect("Failed to create traces directory");
     let mut transaction_parts = models::TransactionParts {
         sender: Some(Address::default()),
         ..Default::default()
