@@ -1,0 +1,28 @@
+[package]
+version = "0.1.0"
+name = "executor"
+edition = "2021"
+
+[dependencies]
+anyhow = "1.0.75"
+ethers = "2.0.14"
+indicatif = "0.17.8"
+ethers-providers = { version = "2.0", features = ["ws"] }
+ethers-core = { version = "2.0" }
+tokio = { version = "1.21.0", features = ["macros", "rt-multi-thread", "signal"] }
+sha2 = { version = "0.10.8", default-features = false }
+revm = { git = "https://github.com/bluealloy/revm", branch = "main", default-features = false, features = [ "serde", "ethersdb", "serde-json", "std" ] }
+#revm = { git = "https://github.com/eigmax/revm", branch = "serde-no-std", default-features = false, features = [ "serde" ] }
+models = { path = "../models" }
+hex = "0.4.3"
+alloy-rlp = { version = "0.3.7", default-features = false, features = [
+    "arrayvec",
+    "derive",
+] }
+serde = { version = "1.0", default-features = false, features = ["alloc", "derive", "rc"] }
+serde_json = { version = "1.0", default-features = false, features = ["alloc"] }
+triehash = "0.8"
+plain_hasher = "0.2"
+hash-db = "0.15"
+log = "0.4.0"
+env_logger = "0.10"
