@@ -1,3 +1,4 @@
+//! Copy from https://github.com/powdr-labs/powdr-revme/blob/main/models/src/serializer.rs
 use alloc::format;
 use serde::Serializer;
 

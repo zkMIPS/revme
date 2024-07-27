@@ -1360,6 +1360,30 @@ dependencies = [
 ]
 
 [[package]]
+name = "executor"
+version = "0.1.0"
+dependencies = [
+ "alloy-rlp",
+ "anyhow",
+ "env_logger",
+ "ethers",
+ "ethers-core",
+ "ethers-providers",
+ "hash-db",
+ "hex",
+ "indicatif",
+ "log",
+ "models",
+ "plain_hasher",
+ "revm",
+ "serde",
+ "serde_json",
+ "sha2",
+ "tokio",
+ "triehash",
+]
+
+[[package]]
 name = "eyre"
 version = "0.6.12"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -1572,30 +1596,6 @@ source = "registry+https://github.com/rust-lang/crates.io-index"
 checksum = "c31b6d751ae2c7f11320402d34e41349dd1016f8d5d45e48c4312bc8625af50c"
 dependencies = [
  "byteorder",
-]
-
-[[package]]
-name = "generate_block_traces"
-version = "0.1.0"
-dependencies = [
- "alloy-rlp",
- "anyhow",
- "env_logger",
- "ethers",
- "ethers-core",
- "ethers-providers",
- "hash-db",
- "hex",
- "indicatif",
- "log",
- "models",
- "plain_hasher",
- "revm",
- "serde",
- "serde_json",
- "sha2",
- "tokio",
- "triehash",
 ]
 
 [[package]]

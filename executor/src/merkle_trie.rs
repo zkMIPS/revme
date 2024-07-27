@@ -1,3 +1,4 @@
+// copy from https://github.com/0xEigenLabs/eigen-prover/blob/main/executor/src/merkle_trie.rs
 #![allow(clippy::redundant_closure)]
 use revm::{
     db::PlainAccount,

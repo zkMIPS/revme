@@ -1,6 +1,6 @@
 [package]
 version = "0.1.0"
-name = "generate_block_traces"
+name = "executor"
 edition = "2021"
 
 [dependencies]

@@ -1,3 +1,4 @@
+//! Copy from https://github.com/powdr-labs/powdr-revme/blob/main/models/src/spec.rs
 use revm::primitives::SpecId;
 use serde::{Deserialize, Serialize};
 

@@ -1,3 +1,4 @@
+//! Copy from https://github.com/powdr-labs/powdr-revme/blob/main/models/src/lib.rs
 #![no_std]
 
 use revm::primitives::{Address, Bytes, HashMap, B256, U256};

@@ -1,3 +1,6 @@
+//! Ported from https://github.com/bluealloy/revm/blob/main/examples/generate_block_traces.rs
+//! Ported from https://github.com/0xEigenLabs/eigen-prover/blob/main/executor/src/lib.rs
+
 use core::time;
 use ethers::abi::Uint;
 use ethers_core::types::{
