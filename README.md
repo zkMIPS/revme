@@ -1,4 +1,4 @@
-# powdr-revme
+# revme
 
 ## Setup
 
@@ -20,10 +20,18 @@ linker = "/mnt/data/mips-linux-muslsf-cross/bin/mips-linux-muslsf-gcc"
 rustflags = ["-C", "target-feature=+crt-static", "-C", "link-arg=-g", "-C", "link-args=-lc"]
 ```
 
-## Compile and Prove
+## Execute and Prove
+
+1. Use executor generate block traces for verifier
+```
+RUST_LOG=info RPC_URL='http://localhost:8545' CHAIN_ID=1337 BLOCK_NO=1 cargo run --bin executor
+```
+
+2. Compile verifier
 ```
 git clone https://github.com/zkMIPS/revme
-cd revme
+cd revme/verifier
 cargo build -Z build-std=core,alloc --target mips-unknown-linux-musl
 ```
+
 Then you can get the MIPS ELF `target/mips-unknown-linux-musl/debug/evm`, then we can refer to [test_execution_rust_fib](https://github.com/zkMIPS/zkm/blob/cd579f799d2a556a625c5052e3722d8c83cf9ef0/src/mips_emulator/tests.rs#L77) and [test_execution_minigeth](https://github.com/zkMIPS/zkm/blob/cd579f799d2a556a625c5052e3722d8c83cf9ef0/src/mips_emulator/tests.rs#L98) to generate the segments and prove them.
