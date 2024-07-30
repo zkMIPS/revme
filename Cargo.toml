@@ -2,7 +2,6 @@
 members = [
   "executor",
   "models",
-  "verifier",
   ]
 
 resolver = "2"

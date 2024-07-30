@@ -1,7 +1,6 @@
 //! Ported from https://github.com/bluealloy/revm/blob/main/examples/generate_block_traces.rs
 //! Ported from https://github.com/0xEigenLabs/eigen-prover/blob/main/executor/src/lib.rs
 
-use core::time;
 use ethers_core::types::{
     BlockId, GethDebugBuiltInTracerType, GethDebugTracerType, GethDebugTracingOptions, GethTrace,
     GethTraceFrame, PreStateFrame,
@@ -16,8 +15,6 @@ use revm::{
     Database, DatabaseCommit, Evm,
 };
 use std::collections::BTreeMap;
-use std::env;
-use std::io::Write;
 use std::sync::Arc;
 use std::time::Instant;
 
@@ -314,21 +311,12 @@ async fn fill_test_pre(
     test_pre
 }
 
-#[tokio::main]
-async fn main() -> anyhow::Result<()> {
-    env_logger::try_init().unwrap_or_default();
-    let rpc_url = env::var("RPC_URL")
-        .unwrap_or("http://localhost:8545".to_string());
-    let chain_id = env::var("CHAIN_ID").unwrap_or("1337".to_string());
-    let chain_id: u64 = chain_id.parse::<_>().unwrap_or(1);
-    let block_path = env::var("BLOCK_PATH").unwrap_or("./result.json".to_string());
-    let block_no = env::var("BLOCK_NO").unwrap_or("1".to_string());
-    let block_no = block_no.parse::<_>().unwrap_or(0);
 
-    // Create ethers client and wrap it in Arc<M>
-    let client = Provider::<Http>::try_from(rpc_url)?;
-    let client = Arc::new(client);
-
+pub async fn process(
+    client: Arc<Provider<Http>>,
+    block_no: u64,
+    chain_id: u64,
+) -> anyhow::Result<String> {
     // Fetch the transaction-rich block
     let block = match client.get_block_with_txs(block_no).await {
         Ok(Some(block)) => block,
@@ -435,7 +423,7 @@ async fn main() -> anyhow::Result<()> {
         let txbytes = serde_json::to_vec(&env.tx).unwrap();
         all_result.push((txbytes, env.tx.data, env.tx.value, result));
         // TODO over Archive rate limit
-        tokio::time::sleep(time::Duration::from_secs(1)).await;
+        // tokio::time::sleep(time::Duration::from_secs(1)).await;
     }
 
     let test_env = fill_test_env(&block);
@@ -451,11 +439,7 @@ async fn main() -> anyhow::Result<()> {
     };
 
     let json_string = serde_json::to_string(&test_unit).expect("Failed to serialize");
-    log::info!("test_unit: {}", json_string);
-
-    let mut file = std::fs::File::create(block_path)?;
-    file.write_all(json_string.as_bytes())?;
-    file.flush()?;
+    log::debug!("test_unit: {}", json_string);
 
     let elapsed = start.elapsed();
     log::info!(
@@ -463,5 +447,5 @@ async fn main() -> anyhow::Result<()> {
         elapsed.as_secs_f64()
     );
 
-    Ok(())
+    Ok(json_string)
 }
