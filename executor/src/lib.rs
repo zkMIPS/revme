@@ -110,8 +110,8 @@ fn fill_test_env(
         current_number: U256::default(),
         current_timestamp: U256::default(),
         current_base_fee: Some(U256::default()),
-        current_excess_blob_gas: Some(U256::default()),
-        previous_hash: Some(B256::default()),
+        // current_excess_blob_gas: Some(U256::default()),
+        previous_hash: B256::default(),
 
         current_random: Some(B256::default()),
         current_beacon_root: Some(B256::default()),
@@ -143,7 +143,7 @@ fn fill_test_env(
     let mut base_fee = revm::primitives::U256::from(0);
     local_fill!(base_fee, block.base_fee_per_gas, U256::from_limbs);
     test_env.current_base_fee = Some(base_fee);
-    test_env.previous_hash = Some(FixedBytes(block.parent_hash.0));
+    test_env.previous_hash = FixedBytes(block.parent_hash.0);
     // local_fill!(test_env.current_random, block.random);
     // local_fill!(test_env.current_beacon_root, block.beacon_root);
     test_env.current_withdrawals_root = if block.withdrawals_root.is_some() {
@@ -431,6 +431,7 @@ pub async fn process(
 
     let test_unit = models::TestUnit {
         info: None,
+        chain_id: Some(chain_id),
         env: test_env,
         pre: test_pre,
         post: test_post,
