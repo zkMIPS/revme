@@ -17,6 +17,8 @@ async fn main() -> anyhow::Result<()> {
         chain_id.parse::<u64>().unwrap(),
     )
     .await.unwrap();
-    std::fs::write(suite_json_path, json_string).expect("Unable to write file");
+    let mut buf = Vec::new();
+    bincode::serialize_into(&mut buf, &json_string).expect("serialization failed");
+    std::fs::write(suite_json_path, buf).expect("Unable to write file");
     Ok(())
 }
