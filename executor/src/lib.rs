@@ -363,6 +363,7 @@ pub async fn process(
     let start = Instant::now();
     let mut transaction_parts = models::TransactionParts {
         sender: Some(Address::default()),
+        to: Some(Address::default()),
         ..Default::default()
     };
 
