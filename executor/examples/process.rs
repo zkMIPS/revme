@@ -1,6 +1,8 @@
 use ethers_providers::{Http, Provider};
 use std::env;
 use std::sync::Arc;
+use std::fs::File;
+use std::io::Write;
 #[tokio::main]
 async fn main() -> anyhow::Result<()> {
     env_logger::try_init().unwrap_or_default();
@@ -17,8 +19,9 @@ async fn main() -> anyhow::Result<()> {
         chain_id.parse::<u64>().unwrap(),
     )
     .await.unwrap();
-    let mut buf = Vec::new();
-    bincode::serialize_into(&mut buf, &json_string).expect("serialization failed");
-    std::fs::write(suite_json_path, buf).expect("Unable to write file");
+    let mut file = File::create(suite_json_path).expect("Failed to create file");
+    if let Err(e) = file.write_all(json_string.as_bytes()) {
+        log::info!("Failed to write json string to file: {}", e);
+    }
     Ok(())
 }
