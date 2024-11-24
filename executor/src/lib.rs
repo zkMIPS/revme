@@ -353,6 +353,8 @@ pub async fn process(
         })
         .modify_cfg_env(|c| {
             c.chain_id = chain_id;
+            // TODO
+            c.disable_base_fee = true;
         })
         .append_handler_register(inspector_handle_register)
         .build();
@@ -374,7 +376,7 @@ pub async fn process(
             .modify()
             .modify_tx_env(|etx| {
                 etx.caller = Address::from(tx.from.as_fixed_bytes());
-                etx.gas_limit = tx.gas.as_u64();
+                etx.gas_limit = if tx.gas.as_u64() > 0 { tx.gas.as_u64() } else { block.gas_limit.as_u64() };
                 local_fill!(etx.gas_price, tx.gas_price, U256::from_limbs);
                 local_fill!(etx.value, Some(tx.value), U256::from_limbs);
                 etx.data = tx.input.0.clone().into();
