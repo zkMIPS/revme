@@ -52,6 +52,7 @@ fn fill_test_tx(
     block: &ethers_core::types::Block<ethers_core::types::Transaction>,
 ) {
     let gas_limit_uint = core256_to_revm256(if tx.gas.as_u64() > 0 { tx.gas } else { block.gas_limit });
+    log::info!("gas_limit: {:?}", gas_limit_uint);
     transaction_parts.gas_limit.push(gas_limit_uint);
 
     let tx_data = tx.input.0.clone();
