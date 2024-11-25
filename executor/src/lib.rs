@@ -49,8 +49,9 @@ fn core256_to_revm256(core256: ethers_core::types::U256) -> revm::primitives::U2
 fn fill_test_tx(
     transaction_parts: &mut models::TransactionParts,
     tx: &ethers_core::types::Transaction,
+    block: &ethers_core::types::Block<ethers_core::types::Transaction>,
 ) {
-    let gas_limit_uint = core256_to_revm256(tx.gas);
+    let gas_limit_uint = core256_to_revm256(if tx.gas.as_u64() > 0 { tx.gas } else { block.gas_limit });
     transaction_parts.gas_limit.push(gas_limit_uint);
 
     let tx_data = tx.input.0.clone();
@@ -417,7 +418,7 @@ pub async fn process(
             })
             .build();
 
-        fill_test_tx(&mut transaction_parts, &tx);
+        fill_test_tx(&mut transaction_parts, &tx, &block);
 
         let result = evm.transact().unwrap();
         log::info!("evm transact result: {:?}", result.result);
