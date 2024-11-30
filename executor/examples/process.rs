@@ -11,12 +11,14 @@ async fn main() -> anyhow::Result<()> {
     let suite_json_path = env::var("SUITE_JSON_PATH").unwrap_or(String::from("/tmp/suite.json"));
     let client = Provider::<Http>::try_from(rpc_url).unwrap();
     let client = Arc::new(client);
-    let json_string = executor::process(
+    let test_suite = executor::process(
         client,
         block_no,
         chain_id.parse::<u64>().unwrap(),
     )
     .await.unwrap();
+    let json_string = serde_json::to_string(&test_suite).expect("Failed to serialize");
+    log::debug!("test_suite: {}", json_string);
     let mut buf = Vec::new();
     bincode::serialize_into(&mut buf, &json_string).expect("serialization failed");
     std::fs::write(suite_json_path, buf).expect("Unable to write file");

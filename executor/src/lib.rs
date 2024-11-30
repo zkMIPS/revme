@@ -7,12 +7,13 @@ use ethers_core::types::{
 };
 use ethers_providers::Middleware;
 use ethers_providers::{Http, Provider};
+use models::{TestSuite, TestUnit};
 use revm::{
     db::{CacheDB, EthersDB, PlainAccount, StateBuilder},
     inspector_handle_register,
     inspectors::TracerEip3155,
     primitives::{Address, Bytes, FixedBytes, HashMap, ResultAndState, TxKind, B256, U256},
-    Database, DatabaseCommit, Evm,
+    DatabaseCommit, Evm,
 };
 use std::collections::BTreeMap;
 use std::sync::Arc;
@@ -244,71 +245,72 @@ fn fill_test_post(
 }
 
 async fn fill_test_pre(
-    block: &ethers_core::types::Block<ethers_core::types::Transaction>,
-    state: &mut revm::db::State<CacheDB<EthersDB<Provider<Http>>>>,
+    // block: &ethers_core::types::Block<ethers_core::types::Transaction>,
+    tx: &ethers_core::types::Transaction,
+    // state: &mut revm::db::State<CacheDB<EthersDB<Provider<Http>>>>,
     client: &Arc<Provider<Http>>,
 ) -> HashMap<Address, models::AccountInfo> {
     let mut test_pre: HashMap<Address, models::AccountInfo> = HashMap::new();
+    // let from_acc = Address::from(tx.from.as_fixed_bytes());
+    // // query basic properties of an account incl bytecode
+    // let acc_info: revm::primitives::AccountInfo = state.basic(from_acc).unwrap().unwrap();
+    // log::info!("acc_info: {} => {:?}", from_acc, acc_info);
 
-    for tx in &block.transactions {
-        let from_acc = Address::from(tx.from.as_fixed_bytes());
-        // query basic properties of an account incl bytecode
-        let acc_info: revm::primitives::AccountInfo = state.basic(from_acc).unwrap().unwrap();
-        log::info!("acc_info: {} => {:?}", from_acc, acc_info);
+    let trace_options = GethDebugTracingOptions {
+        tracer: Some(GethDebugTracerType::BuiltInTracer(
+            GethDebugBuiltInTracerType::PreStateTracer,
+        )),
+        ..Default::default()
+    };
 
-        let trace_options = GethDebugTracingOptions {
-            tracer: Some(GethDebugTracerType::BuiltInTracer(
-                GethDebugBuiltInTracerType::PreStateTracer,
-            )),
-            ..Default::default()
-        };
+    let geth_trace_res = client
+        .debug_trace_transaction(tx.hash, trace_options)
+        .await;
 
-        let geth_trace_res = client
-            .debug_trace_transaction(tx.hash, trace_options)
-            .await;
+    match geth_trace_res {
+        Ok(geth_trace) => {
+            log::info!("geth_trace: {:#?}", geth_trace);
 
-        match geth_trace_res {
-            Ok(geth_trace) => {
-                log::info!("geth_trace: {:#?}", geth_trace);
-
-                match geth_trace.clone() {
-                    GethTrace::Known(frame) => {
-                        if let GethTraceFrame::PreStateTracer(PreStateFrame::Default(pre_state_mode)) =
-                            frame
-                        {
-                            for (address, account_state) in pre_state_mode.0.iter() {
-                                let mut account_info = models::AccountInfo {
-                                    balance: U256::from(0),
-                                    code: Bytes::from(account_state.code.clone().unwrap_or_default()),
-                                    nonce: account_state.nonce.unwrap_or_default().as_u64(),
-                                    storage: HashMap::new(),
-                                };
+            match geth_trace.clone() {
+                GethTrace::Known(frame) => {
+                    if let GethTraceFrame::PreStateTracer(PreStateFrame::Default(pre_state_mode)) =
+                        frame
+                    {
+                        for (address, account_state) in pre_state_mode.0.iter() {
+                            let mut account_info = models::AccountInfo {
+                                balance: U256::from(0),
+                                code: Bytes::from(account_state.code.clone().unwrap_or_default()),
+                                nonce: account_state.nonce.unwrap_or_default().as_u64(),
+                                storage: HashMap::new(),
+                            };
 
 
-                                let balance: ethers_core::types::U256 =
-                                    account_state.balance.unwrap_or_default();
-                                // The radix of account_state.balance is 10, while that of account_info.balance is 16.
-                                account_info.balance =  revm::primitives::U256::from_str_radix(balance.to_string().as_str(), 10).unwrap();
-                            
+                            let balance: ethers_core::types::U256 =
+                                account_state.balance.unwrap_or_default();
+                            // The radix of account_state.balance is 10, while that of account_info.balance is 16.
+                            account_info.balance =  revm::primitives::U256::from_str_radix(balance.to_string().as_str(), 10).unwrap();
+                        
 
-                                if let Some(storage) = account_state.storage.clone() {
-                                    for (key, value) in storage.iter() {
-                                        let new_key: U256 = U256::from_be_bytes(key.0);
-                                        let new_value: U256 = U256::from_be_bytes(value.0);
-                                        account_info.storage.insert(new_key, new_value);
-                                    }
+                            if let Some(storage) = account_state.storage.clone() {
+                                for (key, value) in storage.iter() {
+                                    let new_key: U256 = U256::from_be_bytes(key.0);
+                                    let new_value: U256 = U256::from_be_bytes(value.0);
+                                    account_info.storage.insert(new_key, new_value);
                                 }
+                            }
+                            log::info!("test_pre acc_info: {} => {:?}", Address::from(address.as_fixed_bytes()), account_info);
+                            if !test_pre.contains_key(&Address::from(address.as_fixed_bytes())) {
                                 test_pre.insert(Address::from(address.as_fixed_bytes()), account_info);
                             }
                         }
                     }
-                    GethTrace::Unknown(_) => {}
                 }
+                GethTrace::Unknown(_) => {}
             }
-            Err(e) => {
-                log::info!("debug_trace_transaction faild {}", e)
-            }        
         }
+        Err(e) => {
+            log::info!("debug_trace_transaction faild {}", e)
+        }        
     }
     test_pre
 }
@@ -318,7 +320,7 @@ pub async fn process(
     client: Arc<Provider<Http>>,
     block_no: u64,
     chain_id: u64,
-) -> anyhow::Result<String> {
+) -> anyhow::Result<TestSuite> {
     // Fetch the transaction-rich block
     let block = match client.get_block_with_txs(block_no).await {
         Ok(Some(block)) => block,
@@ -334,9 +336,8 @@ pub async fn process(
     let state_db = EthersDB::new(Arc::clone(&client), Some(prev_id)).expect("panic");
     let cache_db: CacheDB<EthersDB<Provider<Http>>> = CacheDB::new(state_db);
     let mut state = StateBuilder::new_with_database(cache_db).build();
-
-    let test_pre = fill_test_pre(&block, &mut state, &client).await;
-
+    let mut test_units: BTreeMap<String, TestUnit> = BTreeMap::new();
+    
     let mut evm = Evm::builder()
         .with_db(&mut state)
         .with_external_context(TracerEip3155::new(Box::new(std::io::stdout())))
@@ -365,14 +366,8 @@ pub async fn process(
     log::info!("Found {txs} transactions.");
 
     let start = Instant::now();
-    let mut transaction_parts = models::TransactionParts {
-        sender: Some(Address::default()),
-        to: Some(Address::default()),
-        ..Default::default()
-    };
-
+    
     // Fill in CfgEnv
-    let mut all_result: Vec<(Vec<u8>, Bytes, revm::primitives::U256, ResultAndState)> = vec![];
     for tx in block.transactions.clone() {
         evm = evm
             .modify()
@@ -419,6 +414,13 @@ pub async fn process(
             })
             .build();
 
+        let test_pre = fill_test_pre(&tx, &client).await;
+        let mut all_result: Vec<(Vec<u8>, Bytes, revm::primitives::U256, ResultAndState)> = vec![];
+        let mut transaction_parts = models::TransactionParts {
+            sender: Some(Address::default()),
+            to: Some(Address::default()),
+            ..Default::default()
+        };
         fill_test_tx(&mut transaction_parts, &tx, &block);
 
         let result = evm.transact().unwrap();
@@ -427,25 +429,21 @@ pub async fn process(
         let env = evm.context.evm.env.clone();
         let txbytes = serde_json::to_vec(&env.tx).unwrap();
         all_result.push((txbytes, env.tx.data, env.tx.value, result));
-        // TODO over Archive rate limit
-        // tokio::time::sleep(time::Duration::from_secs(1)).await;
+        let test_env = fill_test_env(&block);
+        let test_post = fill_test_post(&all_result);
+
+        let test_unit = models::TestUnit {
+            info: None,
+            chain_id: Some(chain_id),
+            env: test_env,
+            pre: test_pre,
+            post: test_post,
+            transaction: transaction_parts,
+            out: None,
+        };
+
+        test_units.insert(format!("{}", tx.hash), test_unit);
     }
-
-    let test_env = fill_test_env(&block);
-    let test_post = fill_test_post(&all_result);
-
-    let test_unit = models::TestUnit {
-        info: None,
-        chain_id: Some(chain_id),
-        env: test_env,
-        pre: test_pre,
-        post: test_post,
-        transaction: transaction_parts,
-        out: None,
-    };
-
-    let json_string = serde_json::to_string(&test_unit).expect("Failed to serialize");
-    log::debug!("test_unit: {}", json_string);
 
     let elapsed = start.elapsed();
     log::info!(
@@ -453,5 +451,5 @@ pub async fn process(
         elapsed.as_secs_f64()
     );
 
-    Ok(json_string)
+    Ok(TestSuite(test_units))
 }
