@@ -182,11 +182,11 @@ fn fill_test_post(
             log::info!("output: {:?}", result.output());
 
             // post_state: HashMap<Address, AccountInfo>,
-            log::info!("post_state: {:?}", state);
+            log::debug!("post_state: {:?}", state);
             // logs: B256,
             log::info!("logs: {:?}", result.logs());
             // txbytes: Option<Bytes>,
-            log::info!("txbytes: {:?}", txbytes);
+            log::info!("txbytes: {:?}", txbytes.len());
 
             let mut new_state: HashMap<Address, models::AccountInfo> = HashMap::new();
 
@@ -269,7 +269,7 @@ async fn fill_test_pre(
 
     match geth_trace_res {
         Ok(geth_trace) => {
-            log::info!("geth_trace: {:#?}", geth_trace);
+            log::debug!("geth_trace: {:#?}", geth_trace);
 
             match geth_trace.clone() {
                 GethTrace::Known(frame) => {
@@ -298,7 +298,13 @@ async fn fill_test_pre(
                                     account_info.storage.insert(new_key, new_value);
                                 }
                             }
-                            log::info!("test_pre acc_info: {} => {:?}", Address::from(address.as_fixed_bytes()), account_info);
+                            log::info!("test_pre acc_info: {} => balance:{:?} code_len:{} nonce:{} storage:{:?}",
+                                Address::from(address.as_fixed_bytes()),
+                                account_info.balance,
+                                account_info.code.len(),
+                                account_info.nonce,
+                                account_info.storage,
+                            );
                             if !test_pre.contains_key(&Address::from(address.as_fixed_bytes())) {
                                 test_pre.insert(Address::from(address.as_fixed_bytes()), account_info);
                             }
