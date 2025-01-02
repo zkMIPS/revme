@@ -109,7 +109,8 @@ pub struct TransactionParts {
     /// if sender is not present we need to derive it from secret key.
     #[serde(default)]
     pub sender: Option<Address>,
-    #[serde(deserialize_with = "deserialize_maybe_empty")]
+    // #[serde(deserialize_with = "deserialize_maybe_empty")]
+    #[serde(default)]
     pub to: Option<Address>,
     pub value: Vec<U256>,
     pub max_fee_per_gas: Option<U256>,
