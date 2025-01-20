@@ -429,11 +429,11 @@ pub async fn process(
         };
         fill_test_tx(&mut transaction_parts, &tx, &block);
 
-        let result = evm.transact().unwrap();
+        let result = evm.transact()?;
         log::info!("evm transact result: {:?}", result.result);
         evm.context.evm.db.commit(result.state.clone());
         let env = evm.context.evm.env.clone();
-        let txbytes = serde_json::to_vec(&env.tx).unwrap();
+        let txbytes = serde_json::to_vec(&env.tx)?;
         all_result.push((txbytes, env.tx.data, env.tx.value, result));
         let test_env = fill_test_env(&block);
         let test_post = fill_test_post(&all_result);
