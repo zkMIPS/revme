@@ -429,7 +429,12 @@ pub async fn process(
         };
         fill_test_tx(&mut transaction_parts, &tx, &block);
 
-        let result = evm.transact()?;
+        let result = evm.transact();
+        if result.is_err() {
+            log::error!("evm transact error: {:?}", result);
+            continue;
+        }
+        let result = result.unwrap();
         log::info!("evm transact result: {:?}", result.result);
         evm.context.evm.db.commit(result.state.clone());
         let env = evm.context.evm.env.clone();
