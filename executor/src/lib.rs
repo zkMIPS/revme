@@ -372,7 +372,7 @@ pub async fn process(
     log::info!("Found {txs} transactions.");
 
     let start = Instant::now();
-    
+
     // Fill in CfgEnv
     for tx in block.transactions.clone() {
         evm = evm
