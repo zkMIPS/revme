@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2021"
 
 [dependencies]
-revm = { git = "https://github.com/bluealloy/revm", rev = "c2e356d5e1ee29c21f7a262ee58fbd819e9c11ef", default-features = false, features = [ "serde", "ethersdb", "serde-json", "std" ] }
-
+#revm = { git = "https://github.com/bluealloy/revm", rev = "c2e356d5e1ee29c21f7a262ee58fbd819e9c11ef", default-features = false, features = [ "serde", "ethersdb", "serde-json", "std" ] }
+revm = { git = "https://github.com/bluealloy/revm", rev = "c2e356d5e1ee29c21f7a262ee58fbd819e9c11ef", default-features = false, features = [ "serde", "ethersdb", "serde-json"] }
 serde = { version = "1.0", default-features = false, features = ["alloc", "derive", "rc"] }
 serde_json = { version = "1.0", default-features = false, features = ["alloc"] }

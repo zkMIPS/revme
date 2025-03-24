@@ -7,7 +7,7 @@ use ethers_core::types::{
 };
 use ethers_providers::Middleware;
 use ethers_providers::{Http, Provider};
-use models::{TestSuite, TestUnit};
+use models::{SpecName, TestSuite, TestUnit};
 use revm::{
     db::{CacheDB, EthersDB, PlainAccount, StateBuilder},
     inspector_handle_register,
@@ -165,6 +165,7 @@ fn fill_test_env(
 
 fn fill_test_post(
     all_result: &[(Vec<u8>, Bytes, revm::primitives::U256, ResultAndState)],
+    spec: models::SpecName,
 ) -> BTreeMap<models::SpecName, Vec<models::Test>> {
     let mut test_post: BTreeMap<models::SpecName, Vec<models::Test>> = BTreeMap::new();
     for (idx, res) in all_result.iter().enumerate() {
@@ -215,7 +216,7 @@ fn fill_test_post(
             }
 
             let post_value = test_post
-                .entry(models::SpecName::Shanghai)
+                .entry(spec.clone())
                 .or_default();
             let mut new_post_value = std::mem::take(post_value);
 
@@ -235,8 +236,7 @@ fn fill_test_post(
             });
 
             test_post.insert(
-                // TODO: get specID
-                models::SpecName::Shanghai,
+                spec.clone(),
                 new_post_value,
             );
         }
@@ -322,10 +322,12 @@ async fn fill_test_pre(
 }
 
 
+// TODO: should change the name to fetch_block
 pub async fn process(
     client: Arc<Provider<Http>>,
     block_no: u64,
     chain_id: u64,
+    spec_name: &str,
 ) -> anyhow::Result<TestSuite> {
     // Fetch the transaction-rich block
     let block = match client.get_block_with_txs(block_no).await {
@@ -343,6 +345,11 @@ pub async fn process(
     let cache_db: CacheDB<EthersDB<Provider<Http>>> = CacheDB::new(state_db);
     let mut state = StateBuilder::new_with_database(cache_db).build();
     let mut test_units: BTreeMap<String, TestUnit> = BTreeMap::new();
+    let spec = match spec_name {
+        "Shanghai" => SpecName::Shanghai,
+        "Cancun" => SpecName::Cancun,
+        _ => SpecName::Cancun,
+    };
     
     let mut evm = Evm::builder()
         .with_db(&mut state)
@@ -441,7 +448,7 @@ pub async fn process(
         let txbytes = serde_json::to_vec(&env.tx)?;
         all_result.push((txbytes, env.tx.data, env.tx.value, result));
         let test_env = fill_test_env(&block);
-        let test_post = fill_test_post(&all_result);
+        let test_post = fill_test_post(&all_result, spec.clone());
 
         let test_unit = models::TestUnit {
             info: None,
@@ -453,7 +460,7 @@ pub async fn process(
             out: None,
         };
 
-        test_units.insert(format!("{}", tx.hash), test_unit);
+        test_units.insert(format!("{:?}", tx.hash), test_unit);
     }
 
     let elapsed = start.elapsed();

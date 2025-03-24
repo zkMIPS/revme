@@ -17,6 +17,7 @@ async fn main() -> anyhow::Result<()> {
     let chain_id = env::var("CHAIN_ID").unwrap_or(String::from("1"));
     let suite_json_path = env::var("SUITE_JSON_PATH").unwrap_or(String::from("/tmp/suite.json"));
     let testcase_json_path = env::var("TESTCASE_JSON_PATH").unwrap_or(String::from(""));
+    let spec_name = env::var("SPEC_NAME").unwrap_or("Shanghai".to_string());
     let client = Provider::<Http>::try_from(rpc_url).unwrap();
     let client = Arc::new(client);
     let test_suite = if testcase_json_path.is_empty() {  
@@ -24,6 +25,7 @@ async fn main() -> anyhow::Result<()> {
         client,
         block_no,
         chain_id.parse::<u64>().unwrap(),
+        &spec_name,
     )
     .await.unwrap()
     } else {
@@ -31,8 +33,8 @@ async fn main() -> anyhow::Result<()> {
     };
     let json_string = serde_json::to_string(&test_suite).expect("Failed to serialize");
     log::debug!("test_suite: {}", json_string);
-    let mut buf = Vec::new();
-    bincode::serialize_into(&mut buf, &json_string).expect("serialization failed");
-    std::fs::write(suite_json_path, buf).expect("Unable to write file");
+    //let mut buf = Vec::new();
+    //bincode::serialize_into(&mut buf, &json_string).expect("serialization failed");
+    std::fs::write(suite_json_path, &json_string).expect("Unable to write file");
     Ok(())
 }
