@@ -1,0 +1,40 @@
+use ethers_providers::{Http, Provider};
+use std::env;
+use std::sync::Arc;
+
+async fn json_file_to_test_suite(json_file: String) -> anyhow::Result<models::TestSuite> {
+    let json = std::fs::read_to_string(json_file)?;
+    let test_suite: models::TestSuite = serde_json::from_str(&json)?;
+    Ok(test_suite)
+}
+
+#[tokio::main]
+async fn main() -> anyhow::Result<()> {
+    env_logger::try_init().unwrap_or_default();
+    let block_no = env::var("BLOCK_NO").unwrap_or(String::from("1"));
+    let block_no: u64 = block_no.parse().unwrap();
+    let rpc_url = env::var("RPC_URL").unwrap_or(String::from("http://localhost:8545"));
+    let chain_id = env::var("CHAIN_ID").unwrap_or(String::from("1"));
+    let suite_json_path = env::var("SUITE_JSON_PATH").unwrap_or(String::from("/tmp/suite.json"));
+    let testcase_json_path = env::var("TESTCASE_JSON_PATH").unwrap_or(String::from(""));
+    let spec_name = env::var("SPEC_NAME").unwrap_or("Shanghai".to_string());
+    let client = Provider::<Http>::try_from(rpc_url).unwrap();
+    let client = Arc::new(client);
+    let test_suite = if testcase_json_path.is_empty() {  
+        executor::process(
+        client,
+        block_no,
+        chain_id.parse::<u64>().unwrap(),
+        &spec_name,
+    )
+    .await.unwrap()
+    } else {
+        json_file_to_test_suite(testcase_json_path).await.unwrap()
+    };
+    let json_string = serde_json::to_string(&test_suite).expect("Failed to serialize");
+    log::debug!("test_suite: {}", json_string);
+    //let mut buf = Vec::new();
+    //bincode::serialize_into(&mut buf, &json_string).expect("serialization failed");
+    std::fs::write(suite_json_path, &json_string).expect("Unable to write file");
+    Ok(())
+}

@@ -20,7 +20,7 @@ pub use self::spec::SpecName;
 #[derive(Debug, PartialEq, Eq, Deserialize, Serialize)]
 pub struct TestSuite(pub BTreeMap<String, TestUnit>);
 
-#[derive(Debug, PartialEq, Eq, Deserialize, Serialize)]
+#[derive(Debug, PartialEq, Eq, Deserialize, Serialize, Clone)]
 #[serde(deny_unknown_fields)]
 pub struct TestUnit {
     /// Test info is optional
@@ -36,7 +36,7 @@ pub struct TestUnit {
 }
 
 /// State test indexed state result deserialization.
-#[derive(Debug, PartialEq, Eq, Deserialize, Serialize)]
+#[derive(Debug, PartialEq, Eq, Deserialize, Serialize, Clone)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Test {
     pub expect_exception: Option<String>,
@@ -56,7 +56,7 @@ pub struct Test {
     pub txbytes: Option<Bytes>,
 }
 
-#[derive(Debug, PartialEq, Eq, Deserialize, Serialize)]
+#[derive(Debug, PartialEq, Eq, Deserialize, Serialize, Clone)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct TxPartIndices {
     pub data: usize,
@@ -77,7 +77,7 @@ pub struct AccountInfo {
     pub storage: HashMap<U256, U256>,
 }
 
-#[derive(Debug, PartialEq, Eq, Deserialize, Serialize)]
+#[derive(Debug, PartialEq, Eq, Deserialize, Serialize, Clone)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct Env {
     pub current_coinbase: Address,
@@ -98,7 +98,7 @@ pub struct Env {
     // pub current_excess_blob_gas: Option<U256>,
 }
 
-#[derive(Debug, Default, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Default, PartialEq, Eq, Serialize, Deserialize, Clone)]
 #[serde(rename_all = "camelCase", deny_unknown_fields)]
 pub struct TransactionParts {
     pub data: Vec<Bytes>,
@@ -109,7 +109,8 @@ pub struct TransactionParts {
     /// if sender is not present we need to derive it from secret key.
     #[serde(default)]
     pub sender: Option<Address>,
-    #[serde(deserialize_with = "deserialize_maybe_empty")]
+    // #[serde(deserialize_with = "deserialize_maybe_empty")]
+    #[serde(default)]
     pub to: Option<Address>,
     pub value: Vec<U256>,
     pub max_fee_per_gas: Option<U256>,
@@ -148,7 +149,7 @@ mod tests {
         }
 
         let out: Test = serde_json::from_str(json)?;
-        println!("out:{out:?}");
+        //println!("out:{out:?}");
         Ok(())
     }
 
@@ -170,7 +171,7 @@ mod tests {
         }
 
         let out: Test = serde_json::from_str(json)?;
-        println!("out:{out:?}");
+        //println!("out:{out:?}");
         Ok(())
     }
 }
