@@ -20,9 +20,9 @@ use models::{SpecName, TestSuite, TestUnit};
 mod utils;
 use utils::recover_address;
 
-pub fn verify_revm_tx(tx_list: &Vec<u8>) {
+pub fn verify_revm_tx(tx_list: &Vec<u8>) -> bool {
     let suite = read_suite(&tx_list);
-    assert!(execute_test_suite(suite).is_ok());
+    execute_test_suite(suite).is_ok()
 }
 
 pub fn read_suite(s: &Vec<u8>) -> TestSuite {
