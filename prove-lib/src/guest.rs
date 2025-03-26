@@ -6,7 +6,6 @@ extern crate alloc;
 use alloc::collections::BTreeMap;
 use alloc::string::String;
 use alloc::string::ToString;
-use alloc::vec::Vec;
 use alloc::boxed::Box;
 
 use revm::{
@@ -17,15 +16,14 @@ use revm::{
 
 use models::{SpecName, TestSuite, TestUnit};
 
-mod utils;
-use utils::recover_address;
+use crate::utils::recover_address;
 
-pub fn verify_revm_tx(tx_list: &Vec<u8>) -> bool {
-    let suite = read_suite(&tx_list);
+pub fn verify_revm_tx(tx_list: &[u8]) -> bool {
+    let suite = read_suite(tx_list);
     execute_test_suite(suite).is_ok()
 }
 
-pub fn read_suite(s: &Vec<u8>) -> TestSuite {
+pub fn read_suite(s: &[u8]) -> TestSuite {
     let btm: BTreeMap<String, TestUnit> = serde_cbor::from_slice(s).unwrap();
     TestSuite(btm)
 }

@@ -1653,30 +1653,6 @@ dependencies = [
 ]
 
 [[package]]
-name = "guest"
-version = "1.1.0"
-dependencies = [
- "k256",
- "libc",
- "models",
- "revm 11.0.0 (git+https://github.com/zkMIPS/revm?branch=zkm2)",
- "serde",
- "serde_cbor",
- "serde_json",
-]
-
-[[package]]
-name = "guest-std"
-version = "0.0.1"
-dependencies = [
- "guest",
- "models",
- "revm 11.0.0 (git+https://github.com/zkMIPS/revm?branch=zkm2)",
- "serde_cbor",
- "serde_json",
-]
-
-[[package]]
 name = "h2"
 version = "0.3.26"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -2717,6 +2693,19 @@ dependencies = [
  "rusty-fork",
  "tempfile",
  "unarray",
+]
+
+[[package]]
+name = "prove-lib"
+version = "1.1.0"
+dependencies = [
+ "k256",
+ "libc",
+ "models",
+ "revm 11.0.0 (git+https://github.com/zkMIPS/revm?branch=zkm2)",
+ "serde",
+ "serde_cbor",
+ "serde_json",
 ]
 
 [[package]]

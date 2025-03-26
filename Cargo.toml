@@ -2,8 +2,7 @@
 members = [
   "executor",
   "models",
-  "guest",
-  "guest-std",
+  "prove-lib",
 ]
 
 resolver = "2"
