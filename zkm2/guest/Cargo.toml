@@ -1,0 +1,11 @@
+[package]
+name = "revme-guest"
+version = "0.0.1"
+edition = "2021"
+publish = false
+
+[dependencies]
+revm = { git = "https://github.com/zkMIPS/revm", branch = "zkm2", default-features = false, features = [ "serde", "optional_no_base_fee", "optional_balance_check" ] }
+zkm2-zkvm = { git = "https://github.com/zkMIPS/zkm2", branch = "dev/init", package = "zkm2-zkvm" }
+
+guest-lib = { path = "../../guest-lib" }

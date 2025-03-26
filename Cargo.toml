@@ -2,6 +2,9 @@
 members = [
   "executor",
   "models",
-  ]
+  "guest-lib",
+  "zkm2/guest",
+  "zkm2/host",
+]
 
 resolver = "2"
