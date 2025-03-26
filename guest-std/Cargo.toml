@@ -1,15 +1,13 @@
 [package]
-name = "prove-lib"
-version = "1.1.0"
+name = "guest-std"
+version = "0.0.1"
 edition = "2021"
 publish = false
 
 [dependencies]
 revm = { git = "https://github.com/zkMIPS/revm", branch = "zkm2", default-features = false, features = [ "serde", "optional_no_base_fee", "optional_balance_check" ] }
-serde = { version = "1.0", default-features = false, features = ["derive", "rc"] }
 serde_cbor = "0.11.2"
 serde_json = { version = "1.0", default-features = false }
-k256 = { version = "0.13.3", features = ["ecdsa"], default-features = false }
-libc = { version = "0.2", features = ["extra_traits"] }
 
+guest = { path = "../guest" }
 models = { path = "../models" }
