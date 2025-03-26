@@ -1653,7 +1653,7 @@ dependencies = [
 ]
 
 [[package]]
-name = "guest-lib"
+name = "guest"
 version = "1.1.0"
 dependencies = [
  "k256",
@@ -1669,7 +1669,7 @@ dependencies = [
 name = "guest-std"
 version = "0.0.1"
 dependencies = [
- "guest-lib",
+ "guest",
  "models",
  "revm 11.0.0 (git+https://github.com/zkMIPS/revm?branch=zkm2)",
  "serde_cbor",

@@ -5,7 +5,7 @@ use std::io::Read;
 extern crate alloc;
 use alloc::collections::BTreeMap;
 
-use guest_lib::verify_revm_tx;
+use guest::verify_revm_tx;
 use models::TestUnit;
 
 pub fn main() {

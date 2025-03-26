@@ -2,7 +2,7 @@
 members = [
   "executor",
   "models",
-  "guest-lib",
+  "guest",
   "guest-std",
 ]
 
