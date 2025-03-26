@@ -18,6 +18,7 @@ where
     .map_err(serde::de::Error::custom)
 }
 
+#[allow(dead_code)]
 pub fn deserialize_maybe_empty<'de, D>(deserializer: D) -> Result<Option<Address>, D::Error>
 where
     D: de::Deserializer<'de>,
