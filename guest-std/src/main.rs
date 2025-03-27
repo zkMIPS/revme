@@ -2,11 +2,8 @@ use std::env;
 use std::fs::File;
 use std::io::Read;
 
-extern crate alloc;
-use alloc::collections::BTreeMap;
-
 use guest::verify_revm_tx;
-use models::TestUnit;
+use guest_std::cbor_serialize;
 
 pub fn main() {
     let manifest_path = std::env::var("CARGO_MANIFEST_DIR").unwrap();
@@ -16,9 +13,7 @@ pub fn main() {
     let mut data = vec![];
     f.read_to_end(&mut data).unwrap();
 
-    let suite: BTreeMap<String, TestUnit> = serde_json::from_slice(&data).map_err(|e| e).unwrap();
-    let encoded = serde_cbor::to_vec(&suite).unwrap();
-
+    let encoded = cbor_serialize(&data);
     assert!(verify_revm_tx(&encoded));
 
     println!("finish");
