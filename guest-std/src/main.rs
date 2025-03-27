@@ -13,7 +13,7 @@ pub fn main() {
     let mut data = vec![];
     f.read_to_end(&mut data).unwrap();
 
-    let encoded = cbor_serialize(&data);
+    let encoded = cbor_serialize(&data).unwrap();
     assert!(verify_revm_tx(&encoded));
 
     println!("finish");
