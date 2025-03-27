@@ -1,0 +1,15 @@
+[package]
+name = "guest"
+version = "1.1.0"
+edition = "2021"
+publish = false
+
+[dependencies]
+revm = { git = "https://github.com/bluealloy/revm", rev = "c2e356d5e1ee29c21f7a262ee58fbd819e9c11ef", default-features = false, features = [ "serde", "optional_no_base_fee", "optional_balance_check" ] }
+serde = { version = "1.0", default-features = false, features = ["derive", "rc"] }
+serde_cbor = "0.11.2"
+serde_json = { version = "1.0", default-features = false }
+k256 = { version = "0.13.3", features = ["ecdsa"], default-features = false }
+libc = { version = "0.2", features = ["extra_traits"] }
+
+models = { path = "../models" }
