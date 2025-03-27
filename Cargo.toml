@@ -2,6 +2,8 @@
 members = [
   "executor",
   "models",
-  ]
+  "guest",
+  "guest-std",
+]
 
 resolver = "2"
