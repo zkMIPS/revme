@@ -1,7 +1,9 @@
 [workspace]
 members = [
   "executor",
+  "guest",
+  "guest-std",
   "models",
-  ]
+]
 
 resolver = "2"
