@@ -15,8 +15,8 @@ pub fn main() {
         TEST_DATA.to_vec()
     };
 
-    let encoded = cbor_serialize(&data);
-    assert!(verify_revm_tx(&encoded));
+    let encoded = cbor_serialize(&data).unwrap();
+    assert!(verify_revm_tx(&encoded).unwrap());
 
     println!("finish");
 }
