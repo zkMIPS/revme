@@ -3,6 +3,8 @@ use alloc::collections::BTreeMap;
 
 use models::TestUnit;
 
+pub const TEST_DATA: &[u8] = include_bytes!("../test-vectors/test.json");
+
 #[derive(Debug)]
 pub enum HostDataErr {
     SerdeJsonErr(serde_json::Error),
