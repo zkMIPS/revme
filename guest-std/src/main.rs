@@ -2,8 +2,8 @@ use std::env;
 use std::fs::File;
 use std::io::Read;
 
-use guest::{verify_revm_tx, TEST_DATA};
-use guest_std::cbor_serialize;
+use guest::verify_revm_tx;
+use guest_std::{cbor_serialize, TEST_DATA};
 
 pub fn main() {
     let data = if let Ok(json_path) = env::var("JSON_PATH") {

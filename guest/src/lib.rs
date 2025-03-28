@@ -20,8 +20,6 @@ use models::{SpecName, TestSuite, TestUnit};
 mod utils;
 use utils::recover_address;
 
-pub const TEST_DATA: &[u8] = include_bytes!("../test-vectors/test.json");
-
 pub fn verify_revm_tx(tx_list: &Vec<u8>) -> bool {
     let suite = read_suite(&tx_list);
     execute_test_suite(suite).is_ok()
