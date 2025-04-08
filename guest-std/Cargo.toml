@@ -5,7 +5,7 @@ edition = "2021"
 publish = false
 
 [dependencies]
-revm = { git = "https://github.com/zkMIPS/revm", branch = "zkm2", default-features = false, features = [ "serde", "optional_no_base_fee", "optional_balance_check" ] }
+revm = { git = "https://github.com/zkMIPS/revm", branch = "zkMIPS", default-features = false, features = [ "serde", "optional_no_base_fee", "optional_balance_check" ] }
 serde_cbor = "0.11.2"
 serde_json = { version = "1.0", default-features = false }
 

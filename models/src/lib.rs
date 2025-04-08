@@ -147,8 +147,8 @@ mod tests {
             _item: Option<U256>,
         }
 
-        let out: Test = serde_json::from_str(json)?;
-        println!("out:{out:?}");
+        let _out: Test = serde_json::from_str(json)?;
+        // println!("out:{out:?}");
         Ok(())
     }
 
@@ -169,8 +169,8 @@ mod tests {
             _item: Address,
         }
 
-        let out: Test = serde_json::from_str(json)?;
-        println!("out:{out:?}");
+        let _out: Test = serde_json::from_str(json)?;
+        // println!("out:{out:?}");
         Ok(())
     }
 }
