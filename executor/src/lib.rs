@@ -36,10 +36,7 @@ macro_rules! local_fill {
 }
 
 fn new_storage(storage: &revm::primitives::state::EvmStorage) -> HashMap<U256, U256> {
-    storage
-        .iter()
-        .map(|(k, v)| (*k, v.present_value))
-        .collect()
+    storage.iter().map(|(k, v)| (*k, v.present_value)).collect()
 }
 
 fn core256_to_revm256(core256: ethers_core::types::U256) -> revm::primitives::U256 {
@@ -211,9 +208,7 @@ fn fill_test_post(
                 ));
             }
 
-            let post_value = test_post
-                .entry(models::SpecName::Shanghai)
-                .or_default();
+            let post_value = test_post.entry(models::SpecName::Shanghai).or_default();
             let mut new_post_value = std::mem::take(post_value);
 
             let state_root = state_merkle_trie_root(plain_accounts);
@@ -261,9 +256,7 @@ async fn fill_test_pre(
             ..Default::default()
         };
 
-        let geth_trace_res = client
-            .debug_trace_transaction(tx.hash, trace_options)
-            .await;
+        let geth_trace_res = client.debug_trace_transaction(tx.hash, trace_options).await;
 
         match geth_trace_res {
             Ok(geth_trace) => {
@@ -271,23 +264,28 @@ async fn fill_test_pre(
 
                 match geth_trace.clone() {
                     GethTrace::Known(frame) => {
-                        if let GethTraceFrame::PreStateTracer(PreStateFrame::Default(pre_state_mode)) =
-                            frame
+                        if let GethTraceFrame::PreStateTracer(PreStateFrame::Default(
+                            pre_state_mode,
+                        )) = frame
                         {
                             for (address, account_state) in pre_state_mode.0.iter() {
                                 let mut account_info = models::AccountInfo {
                                     balance: U256::from(0),
-                                    code: Bytes::from(account_state.code.clone().unwrap_or_default()),
+                                    code: Bytes::from(
+                                        account_state.code.clone().unwrap_or_default(),
+                                    ),
                                     nonce: account_state.nonce.unwrap_or_default().as_u64(),
                                     storage: HashMap::new(),
                                 };
 
-
                                 let balance: ethers_core::types::U256 =
                                     account_state.balance.unwrap_or_default();
                                 // The radix of account_state.balance is 10, while that of account_info.balance is 16.
-                                account_info.balance =  revm::primitives::U256::from_str_radix(balance.to_string().as_str(), 10).unwrap();
-                            
+                                account_info.balance = revm::primitives::U256::from_str_radix(
+                                    balance.to_string().as_str(),
+                                    10,
+                                )
+                                .unwrap();
 
                                 if let Some(storage) = account_state.storage.clone() {
                                     for (key, value) in storage.iter() {
@@ -296,7 +294,8 @@ async fn fill_test_pre(
                                         account_info.storage.insert(new_key, new_value);
                                     }
                                 }
-                                test_pre.insert(Address::from(address.as_fixed_bytes()), account_info);
+                                test_pre
+                                    .insert(Address::from(address.as_fixed_bytes()), account_info);
                             }
                         }
                     }
@@ -305,12 +304,11 @@ async fn fill_test_pre(
             }
             Err(e) => {
                 log::info!("debug_trace_transaction faild {}", e)
-            }        
+            }
         }
     }
     test_pre
 }
-
 
 pub async fn process(
     client: Arc<Provider<Http>>,

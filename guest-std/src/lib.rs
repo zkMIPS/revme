@@ -12,7 +12,7 @@ pub enum HostDataErr {
 }
 
 pub fn cbor_serialize(data: &[u8]) -> Result<Vec<u8>, HostDataErr> {
-    let suite: BTreeMap<String, TestUnit> = serde_json::from_slice(data).map_err(HostDataErr::SerdeJsonErr)?;
+    let suite: BTreeMap<String, TestUnit> =
+        serde_json::from_slice(data).map_err(HostDataErr::SerdeJsonErr)?;
     serde_cbor::to_vec(&suite).map_err(HostDataErr::SerdeCborErr)
 }
-

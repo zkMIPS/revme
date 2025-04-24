@@ -16,7 +16,7 @@ pub fn main() {
     };
 
     let encoded = cbor_serialize(&data).unwrap();
-    assert!(verify_revm_tx(&encoded).unwrap());
+    let state_root = verify_revm_tx(&encoded).unwrap();
 
-    println!("finish");
+    println!("final state root {:x?}", state_root);
 }

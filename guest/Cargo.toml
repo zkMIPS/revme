@@ -5,11 +5,18 @@ edition = "2021"
 publish = false
 
 [dependencies]
-revm = { git = "https://github.com/zkMIPS/revm", branch = "zkMIPS", default-features = false, features = [ "serde", "optional_no_base_fee", "optional_balance_check" ] }
+revm = { git = "https://github.com/zkMIPS/revm", branch = "zkMIPS", default-features = false, features = ["serde", "optional_no_base_fee", "optional_balance_check"] }
 serde = { version = "1.0", default-features = false, features = ["derive", "rc"] }
 serde_cbor = "0.11.2"
 serde_json = { version = "1.0", default-features = false }
 k256 = { version = "0.13.3", features = ["ecdsa"], default-features = false }
 libc = { version = "0.2", features = ["extra_traits"] }
+hash-db = "0.15"
+alloy-rlp = { version = "0.3", default-features = false, features = [
+    "arrayvec",
+    "derive",
+] }
+plain_hasher = "0.2"
+triehash = "0.8"
 
 models = { path = "../models" }
